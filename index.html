@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Estimate what rooftop solar saves a household on BPC grid electricity in Botswana, and whether a small 2, 5 or 10 kWh battery is worth buying.">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root {
+    color-scheme: light dark;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { margin: 0; }
+  body { font: 14px system-ui, -apple-system, "Segoe UI", sans-serif; background: #fcfcfb; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Roof to Pula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F4F3EF;
+    --surface: #FFFFFF;
+    --surface-2: #FAF9F4;
+    --ink: #16201E;
+    --ink-2: #55615E;
+    --ink-3: #7E8987;
+    --line: #DEDED6;
+    --line-2: #EBEBE3;
+    --sun: #CC7A00;
+    --sun-soft: #F6E8CE;
+    --teal: #00998A;
+    --teal-soft: #D6EEEA;
+    --indigo: #4457D6;
+    --hatch: #AEB4B1;
+    --good: #1E7A4C;
+    --good-soft: #DCEEE4;
+    --warn: #A96600;
+    --warn-soft: #F7E9D2;
+    --bad: #9C3627;
+    --bad-soft: #F6E2DE;
+    --shadow: 0 1px 2px rgba(22,32,30,.06), 0 8px 24px -16px rgba(22,32,30,.18);
+    --radius: 10px;
+    --sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111514;
+      --surface: #1A1F1E;
+      --surface-2: #212726;
+      --ink: #EDEDE6;
+      --ink-2: #A7B1AE;
+      --ink-3: #7C8684;
+      --line: #2C3331;
+      --line-2: #232928;
+      --sun: #C08618;
+      --sun-soft: #33280F;
+      --teal: #00A08F;
+      --teal-soft: #0E2B28;
+      --indigo: #7181E0;
+      --hatch: #4C5452;
+      --good: #4FB37F;
+      --good-soft: #14291F;
+      --warn: #D69A3A;
+      --warn-soft: #2C2210;
+      --bad: #E08373;
+      --bad-soft: #2E1A16;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111514;
+    --surface: #1A1F1E;
+    --surface-2: #212726;
+    --ink: #EDEDE6;
+    --ink-2: #A7B1AE;
+    --ink-3: #7C8684;
+    --line: #2C3331;
+    --line-2: #232928;
+    --sun: #C08618;
+    --sun-soft: #33280F;
+    --teal: #00A08F;
+    --teal-soft: #0E2B28;
+    --indigo: #7181E0;
+    --hatch: #4C5452;
+    --good: #4FB37F;
+    --good-soft: #14291F;
+    --warn: #D69A3A;
+    --warn-soft: #2C2210;
+    --bad: #E08373;
+    --bad-soft: #2E1A16;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 18px 128px;
+  }
+  h1, h2, h3 { margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+  h1 { font-size: 27px; font-weight: 600; line-height: 1.12; }
+  h2 { font-size: 15px; font-weight: 600; }
+  p { margin: 0; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ---------- masthead ---------- */
+  header.top { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .eyebrow {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--sun); font-family: var(--mono);
+  }
+  .lede { color: var(--ink-2); font-size: 13.5px; max-width: 46ch; }
+
+  /* ---------- step cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card > .head {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;
+  }
+  .step-n {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    color: var(--ink-3); letter-spacing: .08em; padding-top: 2px;
+  }
+  .hint { color: var(--ink-3); font-size: 12px; margin-top: 6px; }
+
+  label.fld { display: block; }
+  .fld-lab {
+    display: block; font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px;
+  }
+  select, input[type="number"], input[type="text"] {
+    width: 100%; font-family: var(--sans); font-size: 15px; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 10px; min-height: 42px;
+  }
+  input[type="number"] { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  select { appearance: none; background-image: none; }
+  .selwrap { position: relative; }
+  .selwrap::after {
+    content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px;
+    border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3);
+    transform: translateY(-70%) rotate(45deg); pointer-events: none;
+  }
+  :focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  /* stepper */
+  .stepper { display: flex; align-items: stretch; gap: 0; }
+  .stepper button {
+    width: 42px; min-height: 42px; border: 1px solid var(--line); background: var(--surface-2);
+    color: var(--ink); font-size: 19px; font-family: var(--mono); cursor: pointer; line-height: 1;
+  }
+  .stepper button:first-child { border-radius: 8px 0 0 8px; }
+  .stepper button:last-child { border-radius: 0 8px 8px 0; }
+  .stepper input { border-radius: 0; border-inline: 0; text-align: center; }
+  .stepper button:active { background: var(--line-2); }
+
+  /* segmented control */
+  .seg { display: flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; }
+  .seg button {
+    flex: 1; border: 0; background: transparent; color: var(--ink-2); cursor: pointer;
+    font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 8px 6px; border-radius: 6px;
+    min-height: 38px;
+  }
+  .seg button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
+
+  /* battery option cards */
+  .opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .opt {
+    border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px;
+    padding: 9px 4px; cursor: pointer; text-align: center; color: var(--ink);
+    font-family: var(--sans); display: flex; flex-direction: column; gap: 2px; align-items: center;
+  }
+  .opt .cap { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+  .opt .sub { font-size: 10px; color: var(--ink-3); letter-spacing: .02em; }
+  .opt[aria-pressed="true"] { border-color: var(--teal); background: var(--teal-soft); }
+  .opt[aria-pressed="true"] .sub { color: var(--ink-2); }
+
+  /* roof drawing */
+  .roofbox { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px; }
+  .roofbox svg { display: block; width: 100%; height: auto; max-width: 100%; }
+
+  /* map */
+  #mapShell { position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface-2); }
+  #tiles { position: relative; width: 100%; height: 260px; overflow: hidden; touch-action: none; cursor: crosshair; }
+  #tiles img { position: absolute; width: 256px; height: 256px; user-select: none; -webkit-user-drag: none; }
+  #traceSvg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .mapbar { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--line-2); flex-wrap: wrap; }
+  .mapnote {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; background: var(--surface-2); color: var(--ink-2); font-size: 13px;
+  }
+  .btn {
+    font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 8px 12px; min-height: 38px;
+    border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer;
+  }
+  .btn:active { background: var(--line-2); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
+
+  /* ---------- verdict ---------- */
+  .verdict {
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+    background: var(--surface); box-shadow: var(--shadow); margin-bottom: 12px;
+  }
+  .verdict.is-good { border-left: 4px solid var(--good); }
+  .verdict.is-warn { border-left: 4px solid var(--warn); }
+  .verdict.is-bad  { border-left: 4px solid var(--bad); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+    letter-spacing: .05em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px;
+    font-family: var(--mono);
+  }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad  { background: var(--bad-soft); color: var(--bad); }
+  .verdict h3 { font-size: 19px; font-weight: 600; margin: 10px 0 6px; line-height: 1.25; }
+  .verdict p { color: var(--ink-2); font-size: 13.5px; }
+  .figrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-2); }
+  .fig .k { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  .fig .v { font-family: var(--mono); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 3px; }
+  .fig .u { font-size: 11px; color: var(--ink-3); }
+
+  /* ---------- charts ---------- */
+  .chart-title { font-size: 13px; font-weight: 600; }
+  .chart-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-2); }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+  .flowbar { display: flex; width: 100%; height: 30px; gap: 2px; margin-top: 12px; }
+  .flowbar div { height: 100%; border-radius: 2px; }
+  .flowlabels { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+  .flowlabels div { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-2); }
+  .flowlabels b { color: var(--ink); font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ---------- tables ---------- */
+  .tscroll { overflow-x: auto; margin-top: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: right; padding: 8px 5px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+  #battRows { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .brow {
+    display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2);
+    padding: 10px 11px; cursor: pointer; color: var(--ink); font-family: var(--sans);
+  }
+  .brow[aria-pressed="true"] { border-color: var(--teal); background: var(--teal-soft); }
+  .brow-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .brow-top b { font-size: 14px; font-weight: 600; }
+  .brow-figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 8px; }
+  .brow-figs > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .brow-figs i {
+    font-style: normal; font-size: 9.5px; font-weight: 600; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .brow-figs b { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; }
+  @media (max-width: 440px) { .brow-figs { grid-template-columns: repeat(2, 1fr); } }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+    color: var(--ink-3); border-bottom: 1px solid var(--line);
+  }
+  td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tr.sel { background: var(--teal-soft); }
+  tr.clickable { cursor: pointer; }
+  .tiny { font-size: 11px; color: var(--ink-3); }
+
+  /* ---------- assumptions ---------- */
+  details.ass { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; }
+  details.ass > summary {
+    cursor: pointer; padding: 13px 14px; font-size: 13px; font-weight: 600; list-style: none;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  details.ass > summary::-webkit-details-marker { display: none; }
+  details.ass > summary::after {
+    content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--ink-3);
+    border-bottom: 1.5px solid var(--ink-3); transform: rotate(45deg); flex: none;
+  }
+  details.ass[open] > summary::after { transform: rotate(-135deg); }
+  .assbody { padding: 0 14px 14px; }
+  .assgrid { display: grid; grid-template-columns: 1fr auto; gap: 7px 10px; align-items: center; }
+  .assgrid label { font-size: 12.5px; color: var(--ink-2); }
+  .assgrid input {
+    width: 92px; min-height: 34px; padding: 5px 8px; font-size: 13px; text-align: right;
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+  }
+  .subhead {
+    grid-column: 1 / -1; font-size: 10.5px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--sun); font-family: var(--mono);
+    margin-top: 12px; padding-bottom: 3px; border-bottom: 1px solid var(--line-2);
+  }
+  .subhead:first-child { margin-top: 0; }
+
+  /* ---------- sticky summary ---------- */
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 24px -18px rgba(0,0,0,.4);
+  }
+  .dock-in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+  .dock .fig { flex: 1; }
+  .dock .fig .v { font-size: 17px; }
+
+  footer.foot { margin-top: 20px; color: var(--ink-3); font-size: 11.5px; }
+  footer.foot a { color: var(--ink-2); }
+  .rule { height: 1px; background: var(--line); margin: 18px 0; border: 0; }
+
+  @media (max-width: 400px) {
+    h1 { font-size: 24px; }
+    .figrow { grid-template-columns: 1fr 1fr; }
+    .opts { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Botswana · households · BPC grid</span>
+    <h1>Roof to Pula</h1>
+    <p class="lede">Measure a small roof, put in what the household pays BPC each month, and see what solar would save — and whether a small battery is worth buying.</p>
+  </header>
+
+  <!-- 1. WHERE -->
+  <section class="card">
+    <div class="head"><span class="step-n">01</span><h2>Where is the house?</h2></div>
+    <label class="fld"><span class="fld-lab">Nearest town</span>
+      <span class="selwrap"><select id="town"></select></span>
+    </label>
+    <p class="hint" id="townHint"></p>
+  </section>
+
+  <!-- 2. ROOF -->
+  <section class="card">
+    <div class="head"><span class="step-n">02</span><h2>The roof</h2></div>
+    <div class="seg" role="tablist" aria-label="How to capture the roof">
+      <button type="button" id="tabMeasure" role="tab" aria-selected="true">Measure it</button>
+      <button type="button" id="tabTrace" role="tab" aria-selected="false">Trace on satellite</button>
+    </div>
+
+    <div id="paneMeasure" style="margin-top:12px">
+      <div class="grid2">
+        <label class="fld"><span class="fld-lab">Along the wall (m)</span>
+          <span class="stepper">
+            <button type="button" data-step="roofL:-0.5" aria-label="Decrease length">−</button>
+            <input type="number" id="roofL" min="1" max="30" step="0.5" value="6">
+            <button type="button" data-step="roofL:0.5" aria-label="Increase length">+</button>
+          </span>
+        </label>
+        <label class="fld"><span class="fld-lab">Up the slope (m)</span>
+          <span class="stepper">
+            <button type="button" data-step="roofW:-0.5" aria-label="Decrease width">−</button>
+            <input type="number" id="roofW" min="1" max="30" step="0.5" value="4">
+            <button type="button" data-step="roofW:0.5" aria-label="Increase width">+</button>
+          </span>
+        </label>
+      </div>
+      <p class="hint">No tape measure? Pace it out — one adult stride is close to 0.75 m. Measure only the clear part of one roof face, not the whole house.</p>
+    </div>
+
+    <div id="paneTrace" hidden style="margin-top:12px">
+      <div id="mapShell">
+        <div id="tiles"><svg id="traceSvg" aria-hidden="true"></svg></div>
+        <div class="mapbar">
+          <button class="btn" type="button" id="zoomIn">Zoom in</button>
+          <button class="btn" type="button" id="zoomOut">Zoom out</button>
+          <button class="btn" type="button" id="gpsBtn">Use my location</button>
+          <button class="btn" type="button" id="undoPt">Undo point</button>
+          <button class="btn" type="button" id="clearPts">Clear</button>
+          <button class="btn primary" type="button" id="useTrace" disabled>Use this roof</button>
+        </div>
+      </div>
+      <p class="hint" id="traceHint">Drag to find the house, then tap the corners of one roof face. Three points or more gives an area.</p>
+    </div>
+
+    <div class="grid2" style="margin-top:12px">
+      <label class="fld"><span class="fld-lab">Roof faces</span>
+        <span class="selwrap"><select id="dir"></select></span>
+      </label>
+      <label class="fld"><span class="fld-lab">Pitch</span>
+        <span class="selwrap"><select id="pitch"></select></span>
+      </label>
+    </div>
+    <label class="fld" style="margin-top:10px"><span class="fld-lab">Shading on the roof</span>
+      <span class="selwrap"><select id="shade"></select></span>
+    </label>
+
+    <div class="roofbox" style="margin-top:12px">
+      <div class="chart-title">Panels that fit</div>
+      <div class="chart-sub" id="fitSub">—</div>
+      <svg id="roofSvg" viewBox="0 0 320 200" role="img" aria-labelledby="roofSvgTitle"><title id="roofSvgTitle">Diagram of the roof with panels laid out</title></svg>
+      <div style="margin-top:10px">
+        <span class="fld-lab">Panels to install</span>
+        <span class="stepper" style="max-width:190px">
+          <button type="button" data-step="panels:-1" aria-label="One panel fewer">−</button>
+          <input type="number" id="panels" min="0" max="24" step="1" value="6">
+          <button type="button" data-step="panels:1" aria-label="One panel more">+</button>
+        </span>
+        <p class="hint" id="panelHint"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. BILL -->
+  <section class="card">
+    <div class="head"><span class="step-n">03</span><h2>The electricity bill</h2></div>
+    <div class="seg" role="tablist" aria-label="How the bill is known">
+      <button type="button" id="tabSpend" role="tab" aria-selected="true">Pula per month</button>
+      <button type="button" id="tabUnits" role="tab" aria-selected="false">Units per month</button>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <label class="fld" id="wrapSpend"><span class="fld-lab">Spent on electricity (P/month)</span>
+        <span class="stepper">
+          <button type="button" data-step="spend:-50" aria-label="Less">−</button>
+          <input type="number" id="spend" min="20" max="6000" step="10" value="600">
+          <button type="button" data-step="spend:50" aria-label="More">+</button>
+        </span>
+      </label>
+      <label class="fld" id="wrapUnits" hidden><span class="fld-lab">Units bought (kWh/month)</span>
+        <span class="stepper">
+          <button type="button" data-step="units:-25" aria-label="Fewer">−</button>
+          <input type="number" id="units" min="10" max="3000" step="5" value="500">
+          <button type="button" data-step="units:25" aria-label="More">+</button>
+        </span>
+      </label>
+      <label class="fld"><span class="fld-lab">Who is home in the day</span>
+        <span class="selwrap"><select id="occ"></select></span>
+      </label>
+    </div>
+    <p class="hint" id="billHint"></p>
+  </section>
+
+  <!-- 4. BATTERY -->
+  <section class="card">
+    <div class="head"><span class="step-n">04</span><h2>Battery</h2></div>
+    <div class="opts" id="battOpts" role="group" aria-label="Battery size"></div>
+    <p class="hint">A battery here is charged by surplus solar only — never from the grid. It shifts midday solar into the evening peak.</p>
+  </section>
+
+  <hr class="rule">
+
+  <!-- VERDICT -->
+  <section class="verdict" id="verdict">
+    <span class="pill good" id="vPill">—</span>
+    <h3 id="vHead">—</h3>
+    <p id="vBody">—</p>
+    <div class="figrow">
+      <div class="fig"><div class="k">Bill now</div><div class="v num" id="fBefore">—</div><div class="u">per month</div></div>
+      <div class="fig"><div class="k">Bill after</div><div class="v num" id="fAfter">—</div><div class="u">per month</div></div>
+      <div class="fig"><div class="k">Payback</div><div class="v num" id="fPayback">—</div><div class="u" id="fPaybackU">years</div></div>
+    </div>
+  </section>
+
+  <!-- ENERGY FLOW -->
+  <section class="card">
+    <div class="chart-title">Where the solar goes</div>
+    <div class="chart-sub" id="flowSub">—</div>
+    <div class="flowbar" id="flowBar" role="img" aria-labelledby="flowSub"></div>
+    <div class="flowlabels" id="flowLabels"></div>
+    <p class="hint">Nothing is paid for surplus sent back to the grid, so a wasted kilowatt-hour is simply lost. Cutting panels, moving a pump or geyser into the daytime, or adding storage are the three ways to shrink that bar.</p>
+  </section>
+
+  <!-- MONTHLY -->
+  <section class="card">
+    <div class="chart-title">Units bought from BPC, month by month</div>
+    <div class="chart-sub" id="monthSub">—</div>
+    <svg id="monthSvg" viewBox="0 0 320 170" role="img" aria-labelledby="monthSub"></svg>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--hatch)"></i>Now</span>
+      <span><i class="swatch" style="background:var(--sun)"></i>With solar</span>
+    </div>
+  </section>
+
+  <!-- BATTERY COMPARISON -->
+  <section class="card">
+    <div class="chart-title">Is a small battery worth it?</div>
+    <div class="chart-sub">Each row adds storage to the same solar array. Marginal payback is the extra cost divided by the extra saving it alone produces — judge it against a battery life of about ten years.</div>
+    <div id="battRows" role="group" aria-label="Battery comparison"></div>
+    <p class="hint" id="battNote"></p>
+  </section>
+
+  <!-- SIZING -->
+  <section class="card">
+    <div class="chart-title">How many panels is the right number</div>
+    <div class="chart-sub" id="sizeSub">—</div>
+    <svg id="sizeSvg" viewBox="0 0 320 150" role="img" aria-labelledby="sizeSub"></svg>
+    <p class="hint">Payback by panel count, at this household's bill and occupancy. Filling the roof is rarely the best value when nothing is paid for exports.</p>
+  </section>
+
+  <!-- NUMBERS -->
+  <details class="ass">
+    <summary>All the numbers</summary>
+    <div class="assbody">
+      <div class="tscroll"><table id="numTable"><tbody></tbody></table></div>
+      <button class="btn" type="button" id="copyBtn" style="margin-top:12px">Copy this summary</button>
+      <span class="tiny" id="copyMsg"></span>
+    </div>
+  </details>
+
+  <!-- ASSUMPTIONS -->
+  <details class="ass">
+    <summary>Assumptions — edit any of them</summary>
+    <div class="assbody">
+      <div class="assgrid" id="assGrid"></div>
+      <button class="btn" type="button" id="resetBtn" style="margin-top:14px">Reset to defaults</button>
+      <p class="tiny" style="margin-top:10px">Tariff blocks are the domestic energy charges from BERA's 2026/27 BPC tariff application; costs are benchmarked from 2026 South African retail pricing converted to Pula with a Botswana landed-cost uplift. Both are in the companion spreadsheet with sources, and both should be replaced with local quotes and a current bill.</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <p><strong>Estimate, not a quote.</strong> Savings are against BPC grid electricity only: no export credit, no net metering, no generator comparison, no financing costs. A fixed monthly service charge, if the household is postpaid, is not avoided by solar and is excluded from the saving.</p>
+    <p style="margin-top:8px">Built for the Health Systems Collaborative, University of Oxford — a household-scale companion to the Solar SHIELD hospital tool. Tariff source: BERA 2026-27 BPC tariff application. Solar resource: World Bank / ESMAP Global Solar Atlas.</p>
+  </footer>
+</div>
+
+<div class="dock">
+  <div class="dock-in">
+    <div class="fig"><div class="k">Saving</div><div class="v num" id="dSave">—</div><div class="u">per month</div></div>
+    <div class="fig"><div class="k">Up-front cost</div><div class="v num" id="dCost">—</div><div class="u" id="dCostU">installed</div></div>
+    <div class="fig"><div class="k">Over 20 years</div><div class="v num" id="dNpv">—</div><div class="u">net, discounted</div></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ======================= defaults (mirror of the workbook) ======================= */
+  const DEF = {
+    tariffYear: 2,
+    fixedCharge: 0,
+    blocks2526: [[0,100,0.61],[101,200,0.61],[201,300,0.78],[301,400,0.95],[401,600,1.06],[601,800,1.15],[801,1200,1.19],[1201,1e9,1.25]],
+    blocks2627: [[0,100,0.85],[101,200,0.99],[201,300,1.22],[301,400,1.31],[401,600,1.61],[601,800,2.13],[801,1200,3.24],[1201,1e9,3.50]],
+    panelW: 450, panelL: 1.762, panelWd: 1.134, setback: 0.30, maxPanels: 24, usableFrac: 0.65,
+    pvPerW: 2.80, invFixed: 7500, invPerKw: 2200, mountPerKwp: 1600, cablePerKwp: 1100,
+    labFixed: 4200, labPerKwp: 900, uplift: 0.10, contingency: 0.07,
+    omRate: 0.010, invReplaceYear: 12, invReplaceFrac: 0.85, degradation: 0.005,
+    horizon: 20, discount: 0.08, escalation: 0.03,
+    batt: {
+      2:  { unit: 9500,  invExtra: 6000, install: 2200, pow: 1.5, dod: 0.90, rte: 0.90, life: 10 },
+      5:  { unit: 19500, invExtra: 6000, install: 2800, pow: 2.5, dod: 0.90, rte: 0.90, life: 10 },
+      10: { unit: 36000, invExtra: 6500, install: 3600, pow: 5.0, dod: 0.90, rte: 0.90, life: 10 }
+    }
+  };
+
+  const TOWNS = [
+    ["Gaborone", -24.65, 25.91, 1880], ["Francistown", -21.17, 27.51, 1900],
+    ["Molepolole", -24.41, 25.50, 1885], ["Maun", -19.99, 23.42, 1930],
+    ["Serowe", -22.39, 26.71, 1910], ["Selebi-Phikwe", -22.00, 27.85, 1890],
+    ["Palapye", -22.55, 27.13, 1900], ["Lobatse", -25.22, 25.68, 1870],
+    ["Kanye", -24.97, 25.34, 1875], ["Mahalapye", -23.10, 26.81, 1900],
+    ["Ghanzi", -21.70, 21.65, 1950], ["Tsabong", -26.05, 22.40, 1955],
+    ["Kasane", -17.80, 25.15, 1870], ["Jwaneng", -24.60, 24.73, 1905]
+  ];
+  const DIRS = [
+    ["North — best", [0.97, 1.00, 0.96]], ["North-east or north-west", [0.96, 0.97, 0.92]],
+    ["East or west", [0.94, 0.88, 0.80]], ["South-east or south-west", [0.92, 0.80, 0.68]],
+    ["South — worst", [0.91, 0.74, 0.58]], ["Flat, panels on tilted frames", [1.00, 1.00, 1.00]]
+  ];
+  const PITCHES = [["Shallow (0–15°)", 0], ["Medium (16–30°)", 1], ["Steep (31–45°)", 2]];
+  const SHADES = [["None — open roof", 1.00], ["Light — a distant tree or parapet", 0.95],
+                  ["Moderate — a wall or tank shades part of the day", 0.85], ["Heavy — shade most of the day", 0.72]];
+  const OCCS = [["Out at work all day", 0.22], ["Someone home", 0.32],
+                ["Home all day or home business", 0.45], ["Daytime borehole or pool pump", 0.55]];
+
+  const DAYS = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const PV_DAILY = [5.30,5.20,5.20,5.10,4.90,4.70,4.90,5.30,5.60,5.60,5.50,5.40];
+  const CONS_SHARE = [0.0870,0.0790,0.0830,0.0800,0.0840,0.0870,0.0900,0.0870,0.0810,0.0800,0.0800,0.0820];
+  const LOAD_H = [0.020,0.018,0.017,0.017,0.020,0.035,0.055,0.050,0.035,0.028,0.026,0.028,
+                  0.032,0.030,0.028,0.030,0.038,0.060,0.085,0.095,0.085,0.065,0.045,0.028];
+  const PV_H = [0,0,0,0,0,0,0.005,0.025,0.060,0.090,0.115,0.130,
+                0.135,0.128,0.112,0.085,0.055,0.025,0.007,0,0,0,0,0];
+  const MON = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  /* ======================= state ======================= */
+  const A = JSON.parse(JSON.stringify(DEF));   // live assumptions
+  const S = {
+    town: 0, roofL: 6, roofW: 4, panels: 6, panelsAuto: true,
+    dir: 0, pitch: 1, shade: 1, occ: 1,
+    billMode: "spend", spend: 600, units: 500, batt: 0,
+    tracedArea: null
+  };
+
+  /* ======================= model ======================= */
+  const blocks = () => (A.tariffYear === 1 ? A.blocks2526 : A.blocks2627);
+
+  function bill(kwhMonth, blk) {
+    blk = blk || blocks();
+    let t = 0;
+    for (const [lo, hi, rate] of blk) {
+      const lower = lo === 0 ? 0 : lo - 1;
+      t += Math.max(0, Math.min(kwhMonth, hi) - lower) * rate;
+    }
+    return t;
+  }
+  function kwhFromSpend(spend) {
+    const net = spend - A.fixedCharge;
+    if (net <= 0) return 0;
+    let lo = 0, hi = 5000;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (bill(mid) < net) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  const normalise = xs => { const s = xs.reduce((a, b) => a + b, 0); return xs.map(x => x / s); };
+
+  function reshapeLoad(dayShare) {
+    const base = normalise(LOAD_H);
+    let d = 0;
+    for (let h = 7; h <= 16; h++) d += base[h];
+    const n = 1 - d;
+    const out = base.map((v, h) => (h >= 7 && h <= 16) ? v * (dayShare / d) : v * ((1 - dayShare) / n));
+    return normalise(out);
+  }
+
+  function panelFit(L, W) {
+    const uL = Math.max(0, L - 2 * A.setback), uW = Math.max(0, W - 2 * A.setback);
+    const gap = 0.02;
+    const portrait = Math.floor((uL + gap) / (A.panelWd + gap)) * Math.floor((uW + gap) / (A.panelL + gap));
+    const landscape = Math.floor((uL + gap) / (A.panelL + gap)) * Math.floor((uW + gap) / (A.panelWd + gap));
+    const best = Math.min(A.maxPanels, Math.max(portrait, landscape));
+    return { portrait, landscape, best, orient: landscape > portrait ? "landscape" : "portrait" };
+  }
+
+  function yieldPerKwp() {
+    const base = A.yieldOverride || TOWNS[S.town][3];
+    const o = DIRS[S.dir][1][S.pitch];
+    const sh = SHADES[S.shade][1];
+    return { base, orient: o, shade: sh, net: base * o * sh };
+  }
+
+  function simulate(kwp, monthlyKwh, dayShare, battKwh) {
+    const y = yieldPerKwp();
+    const genAnnual = kwp * y.net;
+    const pvWeightTotal = DAYS.reduce((a, d, i) => a + d * PV_DAILY[i], 0);
+    const pvMonth = DAYS.map((d, i) => genAnnual * (d * PV_DAILY[i]) / pvWeightTotal);
+    const consShare = normalise(CONS_SHARE);
+    const loadMonth = consShare.map(s => monthlyKwh * 12 * s);
+    const loadShape = reshapeLoad(dayShare);
+    const pvShape = normalise(PV_H);
+
+    const b = battKwh ? A.batt[battKwh] : null;
+    const usable = b ? battKwh * b.dod : 0;
+    const rte = b ? b.rte : 0.9, maxPow = b ? b.pow : 0;
+
+    let direct = 0, fromBatt = 0, wasted = 0;
+    const imports = [], gens = [];
+    for (let m = 0; m < 12; m++) {
+      const pvDay = pvMonth[m] / DAYS[m], loadDay = loadMonth[m] / DAYS[m];
+      // several passes let the battery settle into its steady daily cycle before counting
+      const PASSES = 5;
+      let soc = 0, dDirect = 0, dDisch = 0, dWaste = 0, dCharge = 0, socStart = 0;
+      for (let pass = 0; pass < PASSES; pass++) {
+        if (pass === PASSES - 1) { dDirect = 0; dDisch = 0; dWaste = 0; dCharge = 0; socStart = soc; }
+        for (let h = 0; h < 24; h++) {
+          const pv = pvDay * pvShape[h], ld = loadDay * loadShape[h];
+          const use = Math.min(pv, ld);
+          dDirect += use;
+          let surplus = pv - use;
+          const deficit = ld - use;
+          if (surplus > 0 && usable > 0) {
+            const charge = Math.min(surplus, usable - soc, maxPow);
+            soc += charge; surplus -= charge; dCharge += charge;
+          }
+          dWaste += surplus;
+          if (deficit > 0 && soc > 0) {
+            const delivered = Math.min(deficit, soc * rte, maxPow);
+            soc -= delivered / rte; dDisch += delivered;
+          }
+        }
+      }
+      // energy left in the battery at the end of a settled day is never used: count it as spilled
+      const drift = soc - socStart;
+      if (drift > 0) dWaste += drift; else dDisch += drift * rte;
+      direct += dDirect * DAYS[m];
+      fromBatt += dDisch * DAYS[m];
+      wasted += dWaste * DAYS[m];
+      gens.push(pvMonth[m]);
+      imports.push(Math.max(0, loadMonth[m] - dDirect * DAYS[m] - dDisch * DAYS[m]));
+    }
+    return { gen: genAnnual, direct, fromBatt, wasted, selfUsed: direct + fromBatt,
+             imports, gens, loadMonth, cons: monthlyKwh * 12 };
+  }
+
+  function capex(kwp, battKwh) {
+    const pv = kwp * 1000 * A.pvPerW;
+    const inv = A.invFixed + kwp * A.invPerKw;
+    const mount = kwp * (A.mountPerKwp + A.cablePerKwp);
+    const lab = A.labFixed + kwp * A.labPerKwp;
+    const solar = ((pv + inv) * (1 + A.uplift) + mount + lab) * (1 + A.contingency);
+    let battery = 0;
+    if (battKwh) {
+      const b = A.batt[battKwh];
+      battery = ((b.unit + b.invExtra) * (1 + A.uplift) + b.install) * (1 + A.contingency);
+    }
+    return { solar, battery, total: solar + battery, inverter: inv };
+  }
+
+  function annualSaving(sim, monthlyKwh) {
+    const before = bill(monthlyKwh);
+    let s = 0;
+    for (let m = 0; m < 12; m++) s += before - bill(sim.imports[m]);
+    return s;
+  }
+
+  function finance(cost, saving1, battKwh) {
+    let npv = -cost.total, cum = -cost.total, simplePayback = null, discPayback = null;
+    for (let t = 1; t <= A.horizon; t++) {
+      const save = saving1 * Math.pow(1 - A.degradation, t - 1) * Math.pow(1 + A.escalation, t - 1);
+      let net = save - cost.total * A.omRate;
+      if (t === A.invReplaceYear) net -= cost.inverter * A.invReplaceFrac * (1 + A.uplift);
+      if (battKwh && t === A.batt[battKwh].life + 1) net -= A.batt[battKwh].unit * (1 + A.uplift) * (1 + A.contingency);
+      const prev = cum;
+      cum += net;
+      if (simplePayback === null && cum >= 0) simplePayback = t - 1 + (prev < 0 ? (-prev) / net : 0);
+      npv += net / Math.pow(1 + A.discount, t);
+      if (discPayback === null && npv >= 0) discPayback = t;
+    }
+    return { npv, cum, simplePayback, discPayback };
+  }
+
+  function run(panels, battKwh) {
+    const kwp = panels * A.panelW / 1000;
+    const monthlyKwh = S.billMode === "spend" ? kwhFromSpend(S.spend) : S.units;
+    const sim = simulate(kwp, monthlyKwh, OCCS[S.occ][1], battKwh);
+    const cost = capex(kwp, battKwh);
+    const saving = annualSaving(sim, monthlyKwh);
+    const fin = finance(cost, saving, battKwh);
+    return { kwp, monthlyKwh, sim, cost, saving, fin, panels, battKwh };
+  }
+
+  /* ======================= formatting ======================= */
+  const P = n => "P" + Math.round(n).toLocaleString("en-GB");
+  const P1 = n => "P" + n.toFixed(2);
+  const N = n => Math.round(n).toLocaleString("en-GB");
+  const el = id => document.getElementById(id);
+
+  /* ======================= build controls ======================= */
+  function fillSelect(node, items, sel) {
+    node.innerHTML = "";
+    items.forEach((it, i) => {
+      const o = document.createElement("option");
+      o.value = String(i); o.textContent = it;
+      if (i === sel) o.selected = true;
+      node.appendChild(o);
+    });
+  }
+  fillSelect(el("town"), TOWNS.map(t => t[0]), S.town);
+  fillSelect(el("dir"), DIRS.map(d => d[0]), S.dir);
+  fillSelect(el("pitch"), PITCHES.map(p => p[0]), S.pitch);
+  fillSelect(el("shade"), SHADES.map(s => s[0]), S.shade);
+  fillSelect(el("occ"), OCCS.map(o => o[0]), S.occ);
+
+  const BATT_OPTS = [0, 2, 5, 10];
+  el("battOpts").innerHTML = BATT_OPTS.map(b => `
+    <button type="button" class="opt" data-batt="${b}" aria-pressed="${b === S.batt}">
+      <span class="cap">${b === 0 ? "None" : b}</span>
+      <span class="sub">${b === 0 ? "solar only" : "kWh"}</span>
+    </button>`).join("");
+
+  const ASS_FIELDS = [
+    ["h", "Tariff"],
+    ["tariffYear", "Tariff year (1 = 2025/26, 2 = 2026/27)", 1, "int"],
+    ["fixedCharge", "Fixed monthly charge (P)", 0.01],
+    ["escalation", "Real tariff rise (% a year)", 0.1, "pct"],
+    ["h", "Solar"],
+    ["yieldOverride", "Specific yield override (kWh/kWp/yr)", 10, "int"],
+    ["panelW", "Panel rating (W)", 5, "int"],
+    ["degradation", "Panel degradation (% a year)", 0.1, "pct"],
+    ["h", "Installed cost"],
+    ["pvPerW", "Modules (P per Wp)", 0.05],
+    ["invFixed", "Inverter, fixed part (P)", 100],
+    ["invPerKw", "Inverter, per kW (P)", 100],
+    ["mountPerKwp", "Mounting per kWp (P)", 100],
+    ["cablePerKwp", "Cabling per kWp (P)", 100],
+    ["labFixed", "Labour, fixed (P)", 100],
+    ["labPerKwp", "Labour per kWp (P)", 100],
+    ["uplift", "Botswana landed uplift (%)", 1, "pct"],
+    ["contingency", "Contingency (%)", 1, "pct"],
+    ["omRate", "Maintenance (% of cost a year)", 0.1, "pct"],
+    ["h", "Batteries"],
+    ["batt.2.unit", "2 kWh battery (P)", 250],
+    ["batt.5.unit", "5 kWh battery (P)", 250],
+    ["batt.10.unit", "10 kWh battery (P)", 250],
+    ["h", "Appraisal"],
+    ["horizon", "Horizon (years)", 1, "int"],
+    ["discount", "Real discount rate (%)", 0.5, "pct"]
+  ];
+  function getA(path) {
+    return path.split(".").reduce((o, k) => (o == null ? o : o[k]), A);
+  }
+  function setA(path, v) {
+    const parts = path.split("."); const last = parts.pop();
+    parts.reduce((o, k) => o[k], A)[last] = v;
+  }
+  el("assGrid").innerHTML = ASS_FIELDS.map(f => {
+    if (f[0] === "h") return `<div class="subhead">${f[1]}</div>`;
+    const [key, label, step, kind] = f;
+    const raw = getA(key);
+    const val = kind === "pct" ? (raw == null ? "" : (raw * 100).toFixed(1)) : (raw == null ? "" : raw);
+    return `<label for="ass_${key}">${label}</label><input id="ass_${key}" type="number" step="${step}" value="${val}" data-key="${key}" data-kind="${kind || "num"}">`;
+  }).join("");
+
+  /* ======================= roof drawing ======================= */
+  function drawRoof(fit, panels) {
+    const svg = el("roofSvg");
+    const L = S.roofL, W = S.roofW;
+    const VW = 320, VH = 200, pad = 16;
+    const scale = Math.min((VW - 2 * pad) / L, (VH - 2 * pad) / W);
+    const rw = L * scale, rh = W * scale;
+    const ox = (VW - rw) / 2, oy = (VH - rh) / 2;
+    const sb = A.setback * scale;
+    const gapM = 0.02, gap = gapM * scale;
+    const land = fit.orient === "landscape";
+    const pwM = land ? A.panelL : A.panelWd, phM = land ? A.panelWd : A.panelL;
+    const pw = pwM * scale, ph = phM * scale;
+    const uLm = Math.max(0, L - 2 * A.setback), uWm = Math.max(0, W - 2 * A.setback);
+    const cols = Math.max(0, Math.floor((uLm + gapM) / (pwM + gapM)));
+    const rows = Math.max(0, Math.floor((uWm + gapM) / (phM + gapM)));
+
+    let out = `<title id="roofSvgTitle">Roof ${L} by ${W} metres with ${panels} panels laid out ${fit.orient}</title>`;
+    out += `<rect x="${ox}" y="${oy}" width="${rw}" height="${rh}" rx="3" fill="var(--line-2)" stroke="var(--line)" stroke-width="1"/>`;
+    out += `<rect x="${ox + sb}" y="${oy + sb}" width="${Math.max(0, rw - 2 * sb)}" height="${Math.max(0, rh - 2 * sb)}" rx="2" fill="none" stroke="var(--ink-3)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6"/>`;
+    let placed = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (placed >= Math.min(panels, A.maxPanels)) break;
+        const x = ox + sb + c * (pw + gap), y = oy + sb + r * (ph + gap);
+        out += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${pw.toFixed(1)}" height="${ph.toFixed(1)}" rx="1.5" fill="var(--sun)" opacity="0.92"/>`;
+        placed++;
+      }
+    }
+    // ridge arrow showing the uphill direction
+    out += `<text x="${ox + rw / 2}" y="${oy - 5}" text-anchor="middle" font-size="9" font-family="var(--mono)" fill="var(--ink-3)">${L.toFixed(1)} m</text>`;
+    out += `<text x="${ox - 6}" y="${oy + rh / 2}" text-anchor="end" font-size="9" font-family="var(--mono)" fill="var(--ink-3)" transform="rotate(-90 ${ox - 6} ${oy + rh / 2})">${W.toFixed(1)} m</text>`;
+    svg.innerHTML = out;
+  }
+
+  /* ======================= charts ======================= */
+  function drawMonthly(res) {
+    const svg = el("monthSvg");
+    const VW = 320, VH = 170, L = 30, R = 6, T = 10, B = 26;
+    const w = VW - L - R, h = VH - T - B;
+    const before = res.sim.loadMonth, after = res.sim.imports;
+    const max = Math.max(...before, ...after, 1) * 1.1;
+    const bw = w / 12;
+    let out = "";
+    // gridlines with labelled values
+    for (let i = 0; i <= 2; i++) {
+      const v = max * i / 2, y = T + h - (v / max) * h;
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${VW - R}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="0.7"/>`;
+      out += `<text x="${L - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-family="var(--mono)" fill="var(--ink-3)">${Math.round(v)}</text>`;
+    }
+    for (let m = 0; m < 12; m++) {
+      const x = L + m * bw;
+      const hB = (before[m] / max) * h, hA = (after[m] / max) * h;
+      out += `<rect x="${(x + 1.5).toFixed(1)}" y="${(T + h - hB).toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${hB.toFixed(1)}" rx="2" fill="var(--hatch)" opacity="0.45"/>`;
+      out += `<rect x="${(x + 3.5).toFixed(1)}" y="${(T + h - hA).toFixed(1)}" width="${(bw - 7).toFixed(1)}" height="${hA.toFixed(1)}" rx="2" fill="var(--sun)"><title>${MONTH_NAMES[m]}: ${N(after[m])} kWh bought, down from ${N(before[m])}</title></rect>`;
+      out += `<text x="${(x + bw / 2).toFixed(1)}" y="${VH - 10}" text-anchor="middle" font-size="8.5" font-family="var(--mono)" fill="var(--ink-3)">${MON[m]}</text>`;
+    }
+    out += `<line x1="${L}" y1="${T + h}" x2="${VW - R}" y2="${T + h}" stroke="var(--line)" stroke-width="1"/>`;
+    svg.innerHTML = out;
+  }
+
+  function drawSizing(maxFit) {
+    const svg = el("sizeSvg");
+    const VW = 320, VH = 150, L = 30, R = 8, T = 10, B = 28;
+    const w = VW - L - R, h = VH - T - B;
+    const counts = [];
+    for (let n = 1; n <= Math.max(1, maxFit); n++) {
+      const r = run(n, S.batt);
+      counts.push({ n, payback: r.fin.simplePayback, npv: r.fin.npv });
+    }
+    const shown = counts.map(c => c.payback == null ? A.horizon + 6 : c.payback);
+    const max = Math.max(...shown, 12) * 1.08;
+    const best = counts.reduce((a, b) => (b.npv > a.npv ? b : a), counts[0]);
+    const bw = w / counts.length;
+    let out = "";
+    for (let i = 0; i <= 2; i++) {
+      const v = max * i / 2, y = T + h - (v / max) * h;
+      out += `<line x1="${L}" y1="${y.toFixed(1)}" x2="${VW - R}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="0.7"/>`;
+      out += `<text x="${L - 5}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-family="var(--mono)" fill="var(--ink-3)">${v.toFixed(0)}</text>`;
+    }
+    counts.forEach((c, i) => {
+      const val = c.payback == null ? max : c.payback;
+      const bh = (val / max) * h;
+      const x = L + i * bw;
+      const isSel = c.n === S.panels, isBest = c.n === best.n;
+      const fill = isSel ? "var(--sun)" : (isBest ? "var(--teal)" : "var(--hatch)");
+      const op = isSel || isBest ? 1 : 0.5;
+      out += `<rect x="${(x + 1.5).toFixed(1)}" y="${(T + h - bh).toFixed(1)}" width="${(bw - 3).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${fill}" opacity="${op}"><title>${c.n} panel${c.n > 1 ? "s" : ""}: ${c.payback == null ? "never pays back" : c.payback.toFixed(1) + " year payback"}</title></rect>`;
+      if (isBest) out += `<text x="${(x + bw / 2).toFixed(1)}" y="${(T + h - bh - 4).toFixed(1)}" text-anchor="middle" font-size="8" font-family="var(--mono)" fill="var(--teal)">best</text>`;
+      if (counts.length <= 14 || c.n % 2 === 0)
+        out += `<text x="${(x + bw / 2).toFixed(1)}" y="${VH - 9}" text-anchor="middle" font-size="8.5" font-family="var(--mono)" fill="var(--ink-3)">${c.n}</text>`;
+    });
+    out += `<line x1="${L}" y1="${T + h}" x2="${VW - R}" y2="${T + h}" stroke="var(--line)" stroke-width="1"/>`;
+    svg.innerHTML = out;
+    return best;
+  }
+
+  /* ======================= render ======================= */
+  function verdictFor(res) {
+    const pb = res.fin.simplePayback, npv = res.fin.npv, cap = res.cost.total;
+    const disc = (A.discount * 100).toFixed(0) + "%";
+    const over = `Over ${A.horizon} years, after maintenance and one inverter replacement, that is a net ${npv >= 0 ? "gain" : "shortfall"} of ${P(Math.abs(npv))} with future money discounted at ${disc}.`;
+    if (res.saving < 1 || pb == null) {
+      return ["bad", "Doesn't pay for itself", `The saving never covers the cost inside ${A.horizon} years. ${over}`, "Doesn't pay"];
+    }
+    const tag = pb.toFixed(1) + " years to pay back.";
+    if (npv >= cap * 0.15 && pb <= 10) return ["good", "Clearly worth doing", `${tag} ${over}`, "Pays back"];
+    if (npv >= 0) return ["good", "Worth doing", `${tag} ${over}`, "Pays back"];
+    if (npv >= -cap * 0.12) return ["warn", "About break-even", `${tag} ${over} It is close enough that a better quote, a rising tariff or more daytime use would tip it either way.`, "Break-even"];
+    return ["warn", "Worth it only if the family stays put", `${tag} ${over} Fewer panels, or using more electricity during daylight, improves this considerably.`, "Long payback"];
+  }
+
+  function render() {
+    // --- roof and panels
+    const fit = panelFit(S.roofL, S.roofW);
+    let maxFit = fit.best;
+    if (S.tracedArea != null) {
+      const fromArea = Math.min(A.maxPanels, Math.floor(S.tracedArea * A.usableFrac / (A.panelL * A.panelWd)));
+      maxFit = Math.max(fromArea, 1);
+    }
+    if (S.panelsAuto) S.panels = maxFit;
+    S.panels = Math.max(0, Math.min(S.panels, Math.min(maxFit, A.maxPanels)));
+    el("panels").max = String(Math.min(maxFit, A.maxPanels));
+    el("panels").value = S.panels;
+    document.querySelectorAll(".opt").forEach(o => o.setAttribute("aria-pressed", String(parseInt(o.dataset.batt, 10) === S.batt)));
+    el("roofL").value = S.roofL; el("roofW").value = S.roofW;
+
+    const area = S.tracedArea != null ? S.tracedArea : S.roofL * S.roofW;
+    el("fitSub").textContent = S.tracedArea != null
+      ? `${area.toFixed(0)} m² traced · about ${maxFit} panel${maxFit === 1 ? "" : "s"} at ${Math.round(A.usableFrac * 100)}% usable`
+      : `${area.toFixed(1)} m² of roof · ${fit.best} panel${fit.best === 1 ? "" : "s"} fit ${fit.orient} (${fit.portrait} portrait, ${fit.landscape} landscape)`;
+    drawRoof(fit, S.panels);
+    el("panelHint").textContent = S.panels === maxFit
+      ? `${S.panels} × ${A.panelW} W = ${(S.panels * A.panelW / 1000).toFixed(2)} kWp — the most this roof takes.`
+      : `${S.panels} × ${A.panelW} W = ${(S.panels * A.panelW / 1000).toFixed(2)} kWp of the ${maxFit} the roof could take.`;
+
+    // --- town + bill hints
+    const y = yieldPerKwp();
+    el("townHint").textContent = `${TOWNS[S.town][0]} gets about ${N(y.base)} kWh a year from every kWp installed. After this roof's direction, pitch and shading: ${N(y.net)} kWh per kWp.`;
+
+    const res = run(S.panels, S.batt);
+    const monthlyKwh = res.monthlyKwh;
+    const billNow = bill(monthlyKwh) + A.fixedCharge;
+    const marginal = (() => { for (const [lo, hi, r] of blocks()) { const l = lo === 0 ? 1 : lo; if (monthlyKwh >= l && monthlyKwh <= hi) return r; } return blocks()[blocks().length - 1][2]; })();
+    if (S.billMode === "spend") el("units").value = Math.round(monthlyKwh);
+    else el("spend").value = Math.round(billNow);
+    el("billHint").textContent = `P${Math.round(billNow)} a month buys about ${N(monthlyKwh)} units. At that level the next unit saved is worth ${P1(marginal)} — that is what solar displaces first.`;
+
+    // --- verdict
+    const [tone, head, body, pillText] = verdictFor(res);
+    const v = el("verdict");
+    v.className = "verdict is-" + tone;
+    el("vPill").className = "pill " + tone;
+    el("vPill").textContent = pillText;
+    el("vHead").textContent = head;
+    const savedUnits = res.sim.selfUsed;
+    el("vBody").textContent = `${(res.kwp).toFixed(2)} kWp${S.batt ? ` with ${S.batt} kWh of storage` : ""} costing ${P(res.cost.total)} would supply ${N(savedUnits)} of the ${N(res.sim.cons)} units this household uses each year. ${body}`;
+    el("fBefore").textContent = P(billNow);
+    el("fAfter").textContent = P(billNow - res.saving / 12);
+    el("fPayback").textContent = res.fin.simplePayback == null ? "—" : res.fin.simplePayback.toFixed(1);
+    el("fPaybackU").textContent = res.fin.simplePayback == null ? "never, at these prices" : "years";
+
+    // --- dock
+    el("dSave").textContent = P(res.saving / 12);
+    el("dCost").textContent = P(res.cost.total);
+    el("dNpv").textContent = (res.fin.npv < 0 ? "−P" : "P") + N(Math.abs(res.fin.npv));
+
+    // --- energy flow
+    const g = Math.max(res.sim.gen, 1);
+    const parts = [
+      ["Used in the house as it is made", res.sim.direct, "var(--sun)"],
+      ["Stored and used in the evening", res.sim.fromBatt, "var(--teal)"],
+      ["Surplus, wasted", res.sim.wasted, "var(--hatch)"]
+    ].filter(p => p[1] > g * 0.004);
+    el("flowSub").textContent = `${N(res.sim.gen)} kWh generated a year · ${Math.round(100 * res.sim.selfUsed / g)}% of it actually used`;
+    el("flowBar").innerHTML = parts.map(p =>
+      `<div style="flex:${(p[1] / g).toFixed(4)};background:${p[2]};${p[2].includes("hatch") ? "opacity:.55;" : ""}"></div>`).join("");
+    el("flowLabels").innerHTML = parts.map(p =>
+      `<div><i class="swatch" style="background:${p[2]};${p[2].includes("hatch") ? "opacity:.55" : ""}"></i>${p[0]} — <b>${N(p[1])} kWh</b> <span class="tiny">(${Math.round(100 * p[1] / g)}%)</span></div>`).join("");
+
+    // --- monthly
+    el("monthSub").textContent = `From ${N(res.sim.cons)} units a year down to ${N(res.sim.imports.reduce((a, b) => a + b, 0))}`;
+    drawMonthly(res);
+
+    // --- battery table
+    const base = run(S.panels, 0);
+    const rows = BATT_OPTS.map(b => {
+      const r = b === 0 ? base : run(S.panels, b);
+      const extraCost = r.cost.total - base.cost.total;
+      const extraSave = r.saving - base.saving;
+      const extraUnits = r.sim.selfUsed - base.sim.selfUsed;
+      const mp = extraSave > 1 ? extraCost / extraSave : null;
+      let verdict = "—", cls = "";
+      if (b > 0) {
+        if (mp == null) { verdict = "No gain"; cls = "bad"; }
+        else if (mp <= A.batt[b].life) { verdict = "Pays for itself"; cls = "good"; }
+        else if (mp <= A.batt[b].life * 1.5) { verdict = "Just misses"; cls = "warn"; }
+        else { verdict = "No"; cls = "bad"; }
+      }
+      return { b, r, extraCost, extraSave, extraUnits, mp, verdict, cls };
+    });
+    el("battRows").innerHTML = rows.map(x => x.b === 0 ? `
+      <button type="button" class="brow" data-batt="0" aria-pressed="${S.batt === 0}">
+        <span class="brow-top"><b>No battery</b><span class="pill ${S.batt === 0 ? "good" : ""}" style="${S.batt === 0 ? "" : "background:var(--line-2);color:var(--ink-3)"}">Baseline</span></span>
+        <span class="brow-figs">
+          <span><i>Up front</i><b>${P(base.cost.total)}</b></span>
+          <span><i>Saving a year</i><b>${P(base.saving)}</b></span>
+          <span><i>Solar used</i><b>${Math.round(100 * base.sim.selfUsed / Math.max(base.sim.gen, 1))}%</b></span>
+          <span><i>Payback</i><b>${base.fin.simplePayback == null ? "never" : base.fin.simplePayback.toFixed(1) + " yr"}</b></span>
+        </span>
+      </button>` : `
+      <button type="button" class="brow" data-batt="${x.b}" aria-pressed="${x.b === S.batt}">
+        <span class="brow-top"><b>${x.b} kWh battery</b><span class="pill ${x.cls}">${x.verdict}</span></span>
+        <span class="brow-figs">
+          <span><i>Extra cost</i><b>${P(x.extraCost)}</b></span>
+          <span><i>Units caught</i><b>+${N(x.extraUnits)}</b></span>
+          <span><i>Extra saving</i><b>${P(x.extraSave)}/yr</b></span>
+          <span><i>Pays back in</i><b>${x.mp == null ? "never" : x.mp.toFixed(0) + " yr"}</b></span>
+        </span>
+      </button>`).join("");
+    const five = rows.find(x => x.b === 5);
+    el("battNote").textContent = five.extraUnits < 60
+      ? `With ${S.panels} panel${S.panels === 1 ? "" : "s"} there is almost no surplus left over, so a battery has nothing to store — it would catch only ${N(five.extraUnits)} units a year. Storage starts to earn its keep only once the array is big enough to spill.`
+      : `A 5 kWh battery would catch ${N(five.extraUnits)} units a year that are currently wasted, worth ${P(five.extraSave)} a year — against ${P(five.extraCost)} up front and a replacement due around year ${A.batt[5].life + 1}.`;
+
+    // --- sizing
+    const best = drawSizing(Math.max(maxFit, S.panels));
+    const bestRun = run(best.n, S.batt);
+    el("sizeSub").textContent = best.n === S.panels
+      ? `${S.panels} panels is the best value on this roof — ${bestRun.fin.simplePayback == null ? "nothing pays back" : bestRun.fin.simplePayback.toFixed(1) + " year payback"}.`
+      : `${best.n} panel${best.n === 1 ? "" : "s"} gives the best return here (${bestRun.fin.simplePayback == null ? "—" : bestRun.fin.simplePayback.toFixed(1) + " yr, net " + P(bestRun.fin.npv)}), against ${S.panels} selected.`;
+
+    // --- numbers table
+    const rowsN = [
+      ["Town", TOWNS[S.town][0]],
+      ["Roof used", `${area.toFixed(1)} m²`],
+      ["Panels", `${S.panels} × ${A.panelW} W`],
+      ["System size", `${res.kwp.toFixed(2)} kWp`],
+      ["Yield after direction and shading", `${N(y.net)} kWh/kWp/yr`],
+      ["Generated", `${N(res.sim.gen)} kWh/yr`],
+      ["Household consumption", `${N(res.sim.cons)} kWh/yr (${N(monthlyKwh)}/month)`],
+      ["Used directly", `${N(res.sim.direct)} kWh/yr`],
+      ["Delivered by battery", `${N(res.sim.fromBatt)} kWh/yr`],
+      ["Surplus wasted", `${N(res.sim.wasted)} kWh/yr`],
+      ["Self-consumption", `${Math.round(100 * res.sim.selfUsed / g)}%`],
+      ["Bill now", `${P(billNow)}/month`],
+      ["Bill with solar", `${P(billNow - res.saving / 12)}/month`],
+      ["Saving", `${P(res.saving)}/yr`],
+      ["Average value per unit generated", `${P1(res.saving / Math.max(res.sim.gen, 1))}/kWh`],
+      ["Installed cost — solar", P(res.cost.solar)],
+      ["Installed cost — battery", S.batt ? P(res.cost.battery) : "—"],
+      ["Total up front", P(res.cost.total)],
+      ["Simple payback", res.fin.simplePayback == null ? "beyond " + A.horizon + " years" : res.fin.simplePayback.toFixed(1) + " years"],
+      [`Net benefit over ${A.horizon} years (discounted at ${(A.discount * 100).toFixed(0)}%)`, (res.fin.npv < 0 ? "−" : "") + P(Math.abs(res.fin.npv))],
+      [`Undiscounted cash over ${A.horizon} years`, (res.fin.cum < 0 ? "−" : "") + P(Math.abs(res.fin.cum))]
+    ];
+    el("numTable").querySelector("tbody").innerHTML = rowsN.map(r =>
+      `<tr><td>${r[0]}</td><td class="n">${r[1]}</td></tr>`).join("");
+    window.__summary = rowsN.map(r => r[0] + ": " + r[1]).join("\n");
+    save();
+  }
+
+  /* ======================= persistence ======================= */
+  function save() {
+    try { localStorage.setItem("roof2pula", JSON.stringify({ S, A })); } catch (e) { /* ignore */ }
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem("roof2pula");
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d && d.S) Object.assign(S, d.S);
+      if (d && d.A) Object.assign(A, d.A, { batt: Object.assign({}, A.batt, d.A.batt || {}) });
+    } catch (e) { /* ignore */ }
+  }
+  load();
+  el("town").value = String(S.town); el("dir").value = String(S.dir);
+  el("pitch").value = String(S.pitch); el("shade").value = String(S.shade);
+  el("occ").value = String(S.occ);
+  el("spend").value = S.spend; el("units").value = S.units;
+  if (S.billMode === "units") {
+    el("tabUnits").setAttribute("aria-selected", "true");
+    el("tabSpend").setAttribute("aria-selected", "false");
+    el("wrapUnits").hidden = false; el("wrapSpend").hidden = true;
+  }
+  ASS_FIELDS.forEach(f => {
+    if (f[0] === "h") return;
+    const inp = el("ass_" + f[0]);
+    if (!inp) return;
+    const raw = getA(f[0]);
+    inp.value = raw == null ? "" : (f[3] === "pct" ? (raw * 100).toFixed(1) : raw);
+  });
+
+  /* ======================= events ======================= */
+  document.addEventListener("click", e => {
+    const st = e.target.closest("[data-step]");
+    if (st) {
+      const [id, delta] = st.dataset.step.split(":");
+      const input = el(id);
+      const v = (parseFloat(input.value) || 0) + parseFloat(delta);
+      input.value = Math.max(parseFloat(input.min), Math.min(parseFloat(input.max), v));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+    const bo = e.target.closest("[data-batt]");
+    if (bo) {
+      S.batt = parseInt(bo.dataset.batt, 10);
+      document.querySelectorAll(".opt").forEach(o => o.setAttribute("aria-pressed", String(parseInt(o.dataset.batt, 10) === S.batt)));
+      render();
+    }
+  });
+
+  function bindNum(id, key, auto) {
+    el(id).addEventListener("input", () => {
+      const v = parseFloat(el(id).value);
+      if (!isFinite(v)) return;
+      S[key] = v;
+      if (auto) S.panelsAuto = false;
+      if (key === "roofL" || key === "roofW") { S.panelsAuto = true; S.tracedArea = null; }
+      render();
+    });
+  }
+  bindNum("roofL", "roofL"); bindNum("roofW", "roofW");
+  bindNum("panels", "panels", true);
+  bindNum("spend", "spend"); bindNum("units", "units");
+
+  [["town", "town"], ["dir", "dir"], ["pitch", "pitch"], ["shade", "shade"], ["occ", "occ"]].forEach(([id, key]) => {
+    el(id).addEventListener("change", () => { S[key] = parseInt(el(id).value, 10); render(); });
+  });
+
+  function setTab(a, b, paneA, paneB, mode) {
+    el(a).setAttribute("aria-selected", "true");
+    el(b).setAttribute("aria-selected", "false");
+    el(paneA).hidden = false; el(paneB).hidden = true;
+    if (mode) { S.billMode = mode; }
+  }
+  el("tabMeasure").addEventListener("click", () => { setTab("tabMeasure", "tabTrace", "paneMeasure", "paneTrace"); S.tracedArea = null; render(); });
+  el("tabTrace").addEventListener("click", () => { setTab("tabTrace", "tabMeasure", "paneTrace", "paneMeasure"); initMap(); });
+  el("tabSpend").addEventListener("click", () => {
+    setTab("tabSpend", "tabUnits", "wrapSpend", "wrapUnits", "spend");
+    el("wrapSpend").hidden = false; el("wrapUnits").hidden = true; render();
+  });
+  el("tabUnits").addEventListener("click", () => {
+    setTab("tabUnits", "tabSpend", "wrapUnits", "wrapSpend", "units");
+    el("wrapUnits").hidden = false; el("wrapSpend").hidden = true; render();
+  });
+
+  el("assGrid").addEventListener("input", e => {
+    const inp = e.target.closest("input[data-key]");
+    if (!inp) return;
+    let v = parseFloat(inp.value);
+    if (!isFinite(v)) { if (inp.value === "") { setA(inp.dataset.key, null); render(); } return; }
+    if (inp.dataset.kind === "pct") v = v / 100;
+    if (inp.dataset.kind === "int") v = Math.round(v);
+    setA(inp.dataset.key, v);
+    render();
+  });
+  el("resetBtn").addEventListener("click", () => {
+    try { localStorage.removeItem("roof2pula"); } catch (e) { /* ignore */ }
+    location.reload();
+  });
+  el("copyBtn").addEventListener("click", () => {
+    const text = "Roof to Pula — estimate\n\n" + (window.__summary || "");
+    const done = () => { el("copyMsg").textContent = " Copied."; setTimeout(() => el("copyMsg").textContent = "", 2500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => el("copyMsg").textContent = " Could not copy.");
+    else el("copyMsg").textContent = " Not available here.";
+  });
+
+  /* ======================= satellite trace ======================= */
+  const MAP = { z: 19, lat: TOWNS[0][1], lon: TOWNS[0][2], pts: [], ready: false, failed: false, ok: 0 };
+  const TILE = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/";
+
+  function lon2x(lon, z) { return (lon + 180) / 360 * Math.pow(2, z); }
+  function lat2y(lat, z) {
+    const s = Math.sin(lat * Math.PI / 180);
+    return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * Math.pow(2, z);
+  }
+  function metresPerPx(lat, z) { return 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z); }
+
+  function initMap() {
+    if (MAP.ready) return;
+    MAP.ready = true;
+    MAP.lat = TOWNS[S.town][1]; MAP.lon = TOWNS[S.town][2];
+    drawTiles();
+    setTimeout(() => {
+      if (MAP.ok === 0) {
+        MAP.failed = true;
+        const n = document.createElement("div");
+        n.className = "mapnote";
+        n.innerHTML = "Satellite imagery can't load here — this copy of the tool is hosted where outside images are blocked.<br><br>Measure the roof instead, or run the tool from your own site, where the satellite view works.";
+        el("tiles").appendChild(n);
+      }
+    }, 4000);
+  }
+
+  function drawTiles() {
+    const box = el("tiles");
+    const W = box.clientWidth || 320, H = box.clientHeight || 260;
+    const cx = lon2x(MAP.lon, MAP.z) * 256, cy = lat2y(MAP.lat, MAP.z) * 256;
+    const x0 = cx - W / 2, y0 = cy - H / 2;
+    const t0x = Math.floor(x0 / 256), t0y = Math.floor(y0 / 256);
+    const t1x = Math.floor((x0 + W) / 256), t1y = Math.floor((y0 + H) / 256);
+    [...box.querySelectorAll("img")].forEach(i => i.remove());
+    for (let tx = t0x; tx <= t1x; tx++) {
+      for (let ty = t0y; ty <= t1y; ty++) {
+        const img = document.createElement("img");
+        img.alt = "";
+        img.style.left = (tx * 256 - x0) + "px";
+        img.style.top = (ty * 256 - y0) + "px";
+        img.addEventListener("load", () => { MAP.ok++; });
+        img.src = TILE + MAP.z + "/" + ty + "/" + tx;
+        box.insertBefore(img, el("traceSvg"));
+      }
+    }
+    drawTrace();
+  }
+
+  function drawTrace() {
+    const svg = el("traceSvg"), box = el("tiles");
+    const W = box.clientWidth || 320, H = box.clientHeight || 260;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const pts = MAP.pts.map(p => screenOf(p));
+    let out = "";
+    if (pts.length > 1) {
+      out += `<polygon points="${pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ")}" fill="#CC7A00" fill-opacity="0.3" stroke="#CC7A00" stroke-width="2"/>`;
+    }
+    pts.forEach(p => { out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="#FFFFFF" stroke="#CC7A00" stroke-width="2"/>`; });
+    svg.innerHTML = out;
+    const a = polyArea();
+    el("useTrace").disabled = !(a > 1);
+    el("traceHint").textContent = a > 1
+      ? `Traced area: ${a.toFixed(0)} m². Tap “Use this roof” to size the system from it.`
+      : "Drag to find the house, then tap the corners of one roof face. Three points or more gives an area.";
+  }
+
+  function screenOf(p) {
+    const box = el("tiles");
+    const W = box.clientWidth || 320, H = box.clientHeight || 260;
+    const cx = lon2x(MAP.lon, MAP.z) * 256, cy = lat2y(MAP.lat, MAP.z) * 256;
+    return { x: lon2x(p.lon, MAP.z) * 256 - cx + W / 2, y: lat2y(p.lat, MAP.z) * 256 - cy + H / 2 };
+  }
+  function polyArea() {
+    if (MAP.pts.length < 3) return 0;
+    const mpp = metresPerPx(MAP.lat, MAP.z);
+    const pts = MAP.pts.map(p => screenOf(p));
+    let a = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const j = (i + 1) % pts.length;
+      a += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+    }
+    return Math.abs(a / 2) * mpp * mpp;
+  }
+
+  (function mapInteractions() {
+    const box = el("tiles");
+    let drag = null, moved = 0;
+    box.addEventListener("pointerdown", e => {
+      drag = { x: e.clientX, y: e.clientY }; moved = 0;
+      box.setPointerCapture(e.pointerId);
+    });
+    box.addEventListener("pointermove", e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      if (Math.abs(dx) + Math.abs(dy) < 2) return;
+      const mpp = metresPerPx(MAP.lat, MAP.z);
+      const scale = 256 * Math.pow(2, MAP.z);
+      MAP.lon -= dx / scale * 360;
+      MAP.lat += dy * mpp / 111320;
+      drag = { x: e.clientX, y: e.clientY };
+      drawTiles();
+    });
+    box.addEventListener("pointerup", e => {
+      const wasDrag = moved > 6;
+      drag = null;
+      if (wasDrag || MAP.failed) return;
+      const r = box.getBoundingClientRect();
+      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const W = r.width, H = r.height;
+      const cx = lon2x(MAP.lon, MAP.z) * 256, cy = lat2y(MAP.lat, MAP.z) * 256;
+      const wx = (cx - W / 2 + px) / 256, wy = (cy - H / 2 + py) / 256;
+      const n = Math.pow(2, MAP.z);
+      const lon = wx / n * 360 - 180;
+      const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * wy / n))) * 180 / Math.PI;
+      MAP.pts.push({ lat, lon });
+      drawTrace();
+    });
+    el("zoomIn").addEventListener("click", () => { MAP.z = Math.min(20, MAP.z + 1); drawTiles(); });
+    el("zoomOut").addEventListener("click", () => { MAP.z = Math.max(15, MAP.z - 1); drawTiles(); });
+    el("undoPt").addEventListener("click", () => { MAP.pts.pop(); drawTrace(); });
+    el("clearPts").addEventListener("click", () => { MAP.pts = []; drawTrace(); });
+    el("gpsBtn").addEventListener("click", () => {
+      if (!navigator.geolocation) { el("traceHint").textContent = "This browser will not share a location."; return; }
+      el("traceHint").textContent = "Finding your location…";
+      navigator.geolocation.getCurrentPosition(
+        p => { MAP.lat = p.coords.latitude; MAP.lon = p.coords.longitude; MAP.pts = []; drawTiles(); },
+        () => { el("traceHint").textContent = "Could not get a location. Drag the map instead."; },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+    el("useTrace").addEventListener("click", () => {
+      const a = polyArea();
+      if (!(a > 1)) return;
+      S.tracedArea = a;
+      S.panelsAuto = true;
+      render();
+      el("traceHint").textContent = `Using ${a.toFixed(0)} m² of traced roof.`;
+    });
+  })();
+
+  window.addEventListener("resize", () => { if (MAP.ready && !MAP.failed) drawTiles(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
